@@ -5,7 +5,7 @@
 #ifndef TEMPERATURE_H
 #define TEMPERATURE_H
 
-typedef nx_struct tmessage{
+typedef nx_struct_tmessage{
 	nx_uint8_t type;
  	nx_uint16_t hope;
 
