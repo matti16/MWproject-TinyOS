@@ -12,7 +12,7 @@ implementation {
   components new TimerMilliC() as Timer0;
   components new TimerMilliC() as Timer1;
   components new TimerMilliC() as Timer2;
-  components new RandomC();
+  components RandomC;
   components new DemoSensorC() as Sensor;
 
   //Boot interface
@@ -28,12 +28,11 @@ implementation {
   //Interfaces to access package fields
   App.AMPacket -> AMSenderC;
   App.Packet -> AMSenderC;
-  App.PacketAcknowledgements -> ActiveMessageC;
 
   //Timer interface
   App.CollectTimer -> Timer0;
-  App.ProtocolTImer -> Timer1;
-  App.RandomTimer -> Timer2
+  App.ProtocolTimer -> Timer1;
+  App.RandomTimer -> Timer2;
   //Random Interface
   App.Random -> RandomC;
 

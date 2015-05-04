@@ -94,7 +94,7 @@
 				dbg("radio_send", "COLLECT send! Waiting for responses...\n");
 				call ProtocolTimer.startOneShot(WAITING_TIME);
 			}else{
-				if(((temperature_msg_t*)buf)->type == COLLECT ){
+				if( (((temperature_msg_t*) buf)->type) == COLLECT ){
   					collecting = TRUE;
 					dbg("radio_send", "COLLECT forwarded! Waiting for responses...\n");
 				}else if(((temperature_msg_t*)buf)->type == MEASURE ){
@@ -130,7 +130,7 @@
   			num_measures = num_measures + mess->weigth;
   			total_temp = total_temp + (mess->weigth * mess->avg);
 		}
-
+		return buf;
   	}
 
 
@@ -142,12 +142,12 @@
 
  		dbg("radio_send", "Try to send COLLECT at time %s \n", sim_time_string());
 
- 		if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(collect_msg_t)) == SUCCESS) {
+ 		if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(temperature_msg_t)) == SUCCESS) {
 			dbg("radio_send", "COLLECT passed to lower layer at time %s \n", sim_time_string());
 			call ProtocolTimer.startOneShot(WAITING_TIME/my_hope);
 		}else{
      		dbg("radio_send", "FAILED: tryin another time...\n");
-     		if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(collect_msg_t)) == SUCCESS) {
+     		if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(temperature_msg_t)) == SUCCESS) {
 				dbg("radio_send", "COLLECT passed to lower layer at time %s \n", sim_time_string());
 			}else{
 				dbg("radio_send", "ERROR in sending COLLECT!\n");
@@ -166,11 +166,14 @@
 
  	//***************** Read interface ********************//
  	event void Read.readDone(error_t result, uint16_t data) {
+ 		uint16_t average;
+
  		if(result == SUCCESS){
- 			num_measures++;
+ 			num_measures = num_measures + 1;
  			total_temp = total_temp + data;
  		}
- 		uint16_t average = total_temp/num_measures;
+ 		average = total_temp/num_measures;
+ 		
 
  		//***** INTERMEDIATE NODES *******//
  		if(TOS_NODE_ID != 1){
@@ -182,11 +185,11 @@
 
  			dbg("radio_send", "MEASURE: Avg=%i (with n=%i), trying to SEND it at time %s... \n", (int)average , (int)num_measures ,sim_time_string());
 
- 			if (call AMSend.send(back_node, &packet, sizeof(collect_msg_t)) == SUCCESS) {
+ 			if (call AMSend.send(back_node, &packet, sizeof(temperature_msg_t)) == SUCCESS) {
 				dbg("radio_send", "MEASURE passed to lower layer at time %s \n", sim_time_string());
 			}else{
      			dbg("radio_send", "FAILED: tryin another time...\n");
-     			if (call AMSend.send(back_node, &packet, sizeof(collect_msg_t)) == SUCCESS) {
+     			if (call AMSend.send(back_node, &packet, sizeof(temperature_msg_t)) == SUCCESS) {
 					dbg("radio_send", "MEASURE passed to lower layer at time %s \n", sim_time_string());
 				}else{
 					dbg("radio_send", "ERROR in sending MEASURE!\n");

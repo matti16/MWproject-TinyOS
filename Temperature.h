@@ -5,6 +5,10 @@
 #ifndef TEMPERATURE_H
 #define TEMPERATURE_H
 
+#define COLLECT 1
+#define MEASURE 2
+#define WAITING_TIME 30000
+
 typedef nx_struct tmessage{
 	nx_uint8_t type;
  	nx_uint16_t hope;
@@ -13,10 +17,6 @@ typedef nx_struct tmessage{
 	nx_uint16_t avg;
 } temperature_msg_t;
 
-#define COLLECT 1;
-#define MEASURE 2;
-
-#define WAITING_TIME 30*1000;
 
 enum{
 AM_MY_MSG = 6,
