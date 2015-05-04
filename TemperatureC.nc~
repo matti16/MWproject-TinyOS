@@ -53,7 +53,7 @@
   	event void SplitControl.startDone(error_t err){
 		if(err == SUCCESS) {
 			if ( TOS_NODE_ID == 1 ) {
-	 			dbg("boot","I'm node 1: start sending periodical COLLECT!\n");
+	 			dbg("role","I'm node 1: start sending periodical COLLECT!\n");
 	 	 		call CollectTimer.startPeriodic( 5*60*1000 );
 			}
     	}else{
@@ -70,8 +70,6 @@
  		temperature_msg_t* collect = (temperature_msg_t*)(call Packet.getPayload(&packet,sizeof(temperature_msg_t)));
  		collect->type = COLLECT;
  		collect->hope = 1;
-		num_measures = 0;
-		total_temp = 0;
 
  		dbg("radio_send", "Try to send COLLECT at time %s \n", sim_time_string());
 
@@ -96,9 +94,10 @@
 				dbg("radio_send", "COLLECT send! Waiting for responses...\n");
 				call ProtocolTimer.startOneShot(WAITING_TIME);
 			}else{
-				if( collecting ){
-  					dbg("radio_send", "COLLECT forwarded! Waiting for responses...\n");
-				}else {
+				if( (((temperature_msg_t*) buf)->type) == COLLECT ){
+  					collecting = TRUE;
+					dbg("radio_send", "COLLECT forwarded! Waiting for responses...\n");
+				}else if(((temperature_msg_t*)buf)->type == MEASURE ){
 					dbg("radio_send", "MEASURE forwarded back!\n");
 				}
 			}
@@ -112,7 +111,7 @@
 
   		//****COLLECT message*****//
   		if(mess->type == COLLECT){
-  			if(TOS_NODE_ID != 1 && !collecting ){
+  			if(TOS_NODE_ID > 1 && !collecting ){
 
   				//***Get the SOURCE***//
   				back_node = call AMPacket.source(buf);
@@ -120,10 +119,8 @@
   				dbg("radio_receive","COLLECT received at time %s from %hhu. Hope n°%i.\n", sim_time_string(), back_node, (int)my_hope);
 				num_measures = 0;
 				total_temp = 0;
-				collecting = TRUE;
 
   				//**Random Delay**//
-  				dbg("timer","Waiting for a little Random time...\n");
   				call RandomTimer.startOneShot( ((call Random.rand16())%128) + 1 );
   			}
 
@@ -147,7 +144,7 @@
 
  		if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(temperature_msg_t)) == SUCCESS) {
 			dbg("radio_send", "COLLECT passed to lower layer at time %s \n", sim_time_string());
-			call ProtocolTimer.startOneShot(WAITING_TIME/(my_hope+1));
+			call ProtocolTimer.startOneShot(WAITING_TIME/my_hope);
 		}else{
      		dbg("radio_send", "FAILED: tryin another time...\n");
      		if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(temperature_msg_t)) == SUCCESS) {
@@ -155,7 +152,7 @@
 			}else{
 				dbg("radio_send", "ERROR in sending COLLECT!\n");
 			}
-			call ProtocolTimer.startOneShot(WAITING_TIME/(my_hope+1));
+			call ProtocolTimer.startOneShot(WAITING_TIME/my_hope);
      	}
 
  	}
@@ -201,7 +198,7 @@
 
      	//***** NODE 1 - PROTOCOL FINISHED ********//
      	}else{
-     		dbg("default", "***DONE! Average Temp. = %i, Contributors = %i. Time: %s. ***\n", (int)average,(int)num_measures, sim_time_string());
+     		dbg("final", "MEASURE TAKEN! Average Temp. = %i, Contributors = %i. Time: %s.\n", (int)average,(int)num_measures, sim_time_string());
      	}
 
  	}

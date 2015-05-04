@@ -1,0 +1,31 @@
+#!/usr/bin/python
+
+N_MOTES = 1
+DBG_CHANNELS = "default radio_send radio_receive timer"
+SIM_TIME = 5
+
+from TOSSIM import *
+from tinyos.tossim.TossimApp import *
+from random import *
+import sys
+
+t = Tossim([])
+
+for channel in DBG_CHANNELS.split():
+    t.addChannel(channel, sys.stdout)
+
+for i in range (0, N_MOTES):
+    time=i * t.ticksPerSecond() / 100
+    m=t.getNode(i)
+    m.bootAtTime(time)
+    print "Booting ", i, " at ~ ", int(time/t.ticksPerSecond()), "s (",time,")"
+
+time = t.time()
+lastTime = -1
+while (time + SIM_TIME * t.ticksPerSecond() > t.time()):
+    timeTemp = int(t.time()/(t.ticksPerSecond()*10))
+    if( timeTemp > lastTime ): #stampa un segnale ogni 10 secondi... per leggere meglio il log
+        lastTime = timeTemp
+        print "----------------------------------SIMULATION: ~", lastTime*10, " s ----------------------"
+    t.runNextEvent()
+print "----------------------------------END OF SIMULATION-------------------------------------"
